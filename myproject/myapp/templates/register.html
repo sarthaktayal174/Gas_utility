@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <script>
+        function register() {
+            let username = document.getElementById("username").value;
+            let password1 = document.getElementById("password1").value;
+            let password2 = document.getElementById("password2").value;
+
+            if (password1 !== password2) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            fetch("/api/register/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: username,
+                    password: password1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access) {
+                    localStorage.setItem("access_token", data.access);
+                    window.location.href = "/dashboard/";
+                } else {
+                    alert("Error: " + (data.error || "Registration failed"));
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</head>
+<body>
+    <h2>Register</h2>
+    <form onsubmit="event.preventDefault(); register();">
+        <label>Username:</label>
+        <input type="text" id="username" required>
+        <label>Password:</label>
+        <input type="password" id="password1" required>
+        <label>Confirm Password:</label>
+        <input type="password" id="password2" required>
+        <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="/login/">Login</a></p>
+</body>
+</html>

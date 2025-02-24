@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetchRequests(); // Fetch service requests when page loads
+        });
+
+        function fetchRequests() {
+            fetch("/api/service-requests/", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem("access_token")
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let tableBody = document.getElementById("requests-table-body");
+                tableBody.innerHTML = ""; // Clear old data
+                data.forEach(request => {
+                    let row = `<tr>
+                        <td>${request.service_type}</td>
+                        <td>${request.description}</td>
+                        <td>${request.status}</td>
+                        <td>${request.created_at}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            })
+            .catch(error => console.error("Error fetching requests:", error));
+        }
+
+        function submitRequest() {
+            let serviceType = document.getElementById("service_type").value;
+            let description = document.getElementById("description").value;
+
+            fetch("/api/service-requests/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem("access_token")
+                },
+                body: JSON.stringify({ service_type: serviceType, description: description })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Request submitted successfully!");
+                fetchRequests(); // Refresh the request list
+            })
+            .catch(error => console.error("Error submitting request:", error));
+        }
+
+        function logout() {
+            localStorage.removeItem("access_token");
+            window.location.href = "/login/";
+        }
+    </script>
+</head>
+<body>
+    <h2>Welcome, {{ user.username }}!</h2>
+    <button onclick="logout()">Logout</button>
+    
+    <h3>Submit a New Service Request</h3>
+    <form onsubmit="event.preventDefault(); submitRequest();">
+        <label>Service Type:</label>
+        <select id="service_type">
+            <option value="leakage">Gas Leakage</option>
+            <option value="billing">Billing Issue</option>
+            <option value="connection">New Connection</option>
+        </select>
+        <label>Description:</label>
+        <textarea id="description" required></textarea>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h3>Your Service Requests</h3>
+    <table border="1">
+        <tr>
+            <th>Service Type</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Created At</th>
+        </tr>
+        <tbody id="requests-table-body">
+            <!-- Requests will be loaded dynamically -->
+        </tbody>
+    </table>
+</body>
+</html>
